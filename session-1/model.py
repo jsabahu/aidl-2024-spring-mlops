@@ -8,9 +8,12 @@ class MyModel(nn.Module):
         self.act1 = nn.Tanh()
         self.fc2 = nn.Linear(n_hidden, n_hidden)
         self.act2 = nn.Tanh()
-        self.fc3 = nn.Linear(n_hidden, n_outputs)
+        self.fc3 = nn.Linear(n_hidden, n_hidden)
+        self.act3 = nn.Tanh()
+        self.fc4 = nn.Linear(n_hidden, n_outputs)
     
     def forward(self, x):
         x = self.act1(self.fc1(x))
         x = self.act2(self.fc2(x))
-        return self.fc3(x)
+        x = self.act3(self.fc3(x))
+        return self.fc4(x)
