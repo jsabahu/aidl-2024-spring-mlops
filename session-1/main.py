@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from dataset import MyDataset
 from model import MyModel
@@ -27,6 +28,7 @@ dataloader = DataLoader(my_dataset, batch_size=args.batch_size)
 my_model = MyModel(args.n_features, args.n_hidden, args.n_outputs).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.SGD(my_model.parameters(), lr=args.lr)
+scheduler = ReduceLROnPlateau(optimizer, 'min')
 
 loss_history = []
 
@@ -39,6 +41,7 @@ for epoch in range(args.epochs):
         loss = criterion(y_, y)
         loss.backward()
         optimizer.step()
+        scheduler.step(loss)
         loss_history.append(loss.item())
 
 plt.plot(loss_history)
