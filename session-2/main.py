@@ -18,7 +18,7 @@ def eval_single_epoch(...):
 
 def train_model(config):
     
-    my_dataset = MyDataset(...)
+    my_dataset = MyDataset(images_path=images_path, labels_path=labels_path)
     my_model = MyModel(...).to(device)
     for epoch in range(config["epochs"]):
         train_single_epoch(...)
