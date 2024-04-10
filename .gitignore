@@ -159,5 +159,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-MLOps/aidl-2024-spring-mlops/session-4/data/*
-MLOps/aidl-2024-spring-mlops/session-4/app/*
+session-4/data/*
+session-4/app/*
