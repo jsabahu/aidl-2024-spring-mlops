@@ -17,10 +17,18 @@ def train(dataloader):
     train_acc = 0
     for text, offsets, label in dataloader:
         # TODO complete the training code. The inputs of the model are text and offsets
-        ...
+        # Compute model output
+        output = model(text, offsets)
+        # Calculate cross-entropy loss
+        loss = criterion(output, label)
 
         train_loss += loss.item() * len(output)
         train_acc += (output.argmax(1) == label).sum().item()
+
+        # Backpropagation and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
     # Adjust the learning rate
     scheduler.step()
@@ -33,12 +41,13 @@ def test(dataloader: DataLoader):
 
     loss = 0
     acc = 0
-    for text, offsets, label in dataloader:
-        # TODO complete the evaluation code. The inputs of the model are text and offsets
-        ...
+    with torch.no_grad():
+        for text, offsets, label in dataloader:
+            output = model(text, offsets)
+            loss_ = criterion(output, label)
 
-        loss += loss.item() * len(output)
-        acc += (output.argmax(1) == label).sum().item()
+            loss += loss_.item() * len(output)
+            acc += (output.argmax(1) == label).sum().item()
 
     return loss / len(dataloader.dataset), acc / len(dataloader.dataset)
 
@@ -64,7 +73,7 @@ if __name__ == "__main__":
 
     # Load the model
     # TODO load the model
-    model = ...
+    model = SentimentAnalysis(vocab_size=VOCAB_SIZE, embed_dim=EMBED_DIM, num_class=NUM_CLASS)
         
     # We will use CrossEntropyLoss even though we are doing binary classification 
     # because the code is ready to also work for many classes
@@ -77,7 +86,12 @@ if __name__ == "__main__":
     # Split train and val datasets
     # TODO split `train_val_dataset` in `train_dataset` and `valid_dataset`. The size of train dataset should be 95%
 
-    train_dataset, valid_dataset = ...
+    # Assuming dataset has 100 samples
+    total_length = len(train_val_dataset)
+    train_length = int(0.95 * total_length)
+    valid_length = total_length - train_length
+
+    train_dataset, valid_dataset = random_split(dataset=train_val_dataset, lengths=[train_length, valid_length])
     
     # DataLoader needs an special function to generate the batches. 
     # Since we will have inputs of varying size, we will concatenate 
@@ -115,6 +129,7 @@ if __name__ == "__main__":
         "model_state_dict": model.cpu().state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
         "vocab": yelp_loader.vocab,
+        "vocab_size": VOCAB_SIZE,
         "ngrams": NGRAMS,
         "embed_dim": EMBED_DIM,
         "num_class": NUM_CLASS,

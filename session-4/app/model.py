@@ -6,8 +6,10 @@ class SentimentAnalysis(nn.Module):
         super().__init__()
         # EmbeddingBag is the combination of Embedding and mean() in a single layer
         # TODO complete the embedding bad and fc layers with the correct parameters. Set `sparse`=True in the EmbeddingBag
-        self.embedding = ...
-        self.fc = ...
+        # EmbeddingBag layer
+        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
+        # Fully connected layer
+        self.fc = nn.Linear(embed_dim, num_class)
         self.init_weights()
 
     def init_weights(self):
@@ -18,4 +20,8 @@ class SentimentAnalysis(nn.Module):
 
     def forward(self, text, offsets):
         # TODO complete the forward method. EmbeddingBag layers take `text` and `offsets` as inputs
-        ...
+        # Compute the embeddings and mean pooling
+        embedded_text = self.embedding(text, offsets)
+        # Pass through the FC layer
+        output = self.fc(embedded_text)
+        return output
