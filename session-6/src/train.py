@@ -3,6 +3,7 @@ import time
 
 import pandas as pd
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 
@@ -13,16 +14,30 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_epoch(dataloader, model, optimizer, criterion):
 
+    """
+    Trains the model for one epoch.
+
+    Args:
+        dataloader (torch.utils.data.DataLoader): DataLoader for training data.
+        model (nn.Module): Your regression model.
+        optimizer (torch.optim.Optimizer): Optimizer for updating model weights.
+        criterion (nn.Module): Loss function.
+
+    Returns:
+        float: Average training loss for the epoch.
+        """
+     
     # Train the model
     train_loss = 0
     for X, y in dataloader:
-        optimizer...
+        optimizer.zero_grad()
         X, y = X.to(device), y.to(device)
-        y_ = ...
-        loss = ...
+        # Compute model predictions
+        y_ = model(X)
+        loss = criterion(y_, y)
         train_loss += loss.item() * len(y)
-        loss...
-        optimizer...
+        loss.backward()
+        optimizer.step()
 
     return train_loss / len(dataloader.dataset)
 
@@ -32,8 +47,8 @@ def test_epoch(dataloader: DataLoader, model, criterion):
     for X, y in dataloader:
         X, y = X.to(device), y.to(device)
         with torch.no_grad():
-            y_ = ...
-            loss = ...
+            y_ = model(X)
+            loss = criterion(y_, y)
             test_loss += loss.item() * len(y)
 
     return test_loss / len(dataloader.dataset)
@@ -63,40 +78,41 @@ def train():
     # Now you should normalize your data (without Data Leakage) and wrap it in a Dataset
 
     # Start by converting the numpy tensors to torch tensors
-    train_X, train_y = ...
-    test_X, test_y = ...
+    # SE puede hacer con el modelo (output 1)
+    train_X, train_y = torch.tensor(train_X, dtype=torch.float32), torch.tensor(train_y, dtype=torch.float32).reshape(-1,1)
+    test_X, test_y = torch.tensor(test_X, dtype=torch.float32), torch.tensor(test_y, dtype=torch.float32).reshape(-1,1)
 
     # Compute the mean and std in the correct dimension
-    x_mean = ...
-    x_std = ...
-    y_mean = ...
-    y_std = ...
+    x_mean = train_X.mean(dim=0)
+    x_std = train_X.mean(dim=0)
+    y_mean = train_y.mean(dim=0)
+    y_std = train_y.mean(dim=0)
 
     # Apply it to our data ((data - mean)/std)
-    train_X = ...
-    train_y = ...
+    train_X = ((train_X - x_mean)/x_std)
+    train_y = ((train_y - y_mean)/y_std)
 
-    test_X = ...
-    test_y = ...
+    test_X = ((test_X - x_mean)/x_std)
+    test_y = ((test_y - y_mean)/y_std)
 
     # Instantiate the datasets
-    train_dataset = ...
-    test_dataset = ...
+    train_dataset = TensorDataset(train_X, train_y)
+    test_dataset = TensorDataset(train_X, train_y)
 
     # Instantiate data loaders
-    train_loader = ...
-    test_loader = ...
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
 
     input_size = train_X.shape[1]
 
     # Load the model
-    model = ...
+    model = RegressionModel(input_size=input_size,hidden_size=HIDDEN_SIZE).to(device)
         
     # You should use a loss function appropriate for regression
-    criterion = ...
+    criterion = nn.MSELoss()
 
     # Setup optimizer. SGD with lr=0.1 will work
-    optimizer = ...
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 
     for epoch in range(N_EPOCHS):
 
@@ -119,16 +135,16 @@ def train():
     # We can save everything we will need later in the checkpoint.
     # Here, we could save a feature transformer if we had used one
     checkpoint = {
-        "model_state_dict": ...,
-        "optimizer_state_dict": ...,
-        "input_size": ...,
-        "hidden_size": ...,
-        "x_mean": ...,
-        "y_mean": ...,
-        "x_std": ...,
-        "y_std": ...,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "input_size": input_size,
+        "hidden_size": HIDDEN_SIZE,
+        "x_mean": x_mean,
+        "y_mean": y_mean,
+        "x_std": x_std,
+        "y_std": y_std,
     }
-    torch.save(...)
+    torch.save(checkpoint, savedir)
 
 if __name__ == "__main__":
     train()
