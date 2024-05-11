@@ -3,3 +3,4 @@ numpy
 Pillow
 torch
 ray
+ray[tune]

@@ -3,7 +3,7 @@ import torch.nn as nn
 class MyModel(nn.Module):
 
     def __init__(self,
-                 num_clases):
+                 h1=32, h2=64, h3=128, h4=128):
         super().__init__()
         self.conv_layers = nn.Sequential(
             nn.Conv2d(1, 32, 3),
